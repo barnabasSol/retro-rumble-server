@@ -1,0 +1,17 @@
+services:
+  retro-rumble:
+    ports:
+      - 1800:1800
+    build:
+      context: deployment/
+      
+  db:
+    image: redis:7.4
+    command: redis-server --requirepass ${REDIS_PASSWORD} 
+    volumes:
+      - redis_data:/data
+    networks:
+      - back-tier 
+    restart: always
+volumes:
+  redis_data:
