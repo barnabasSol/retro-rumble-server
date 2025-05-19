@@ -3,7 +3,7 @@ services:
     ports:
       - 1800:1800
     build:
-      context: deployment/
+      context: ./deployment
       
   db:
     image: redis:7.4
