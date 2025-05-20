@@ -10,7 +10,7 @@ import (
 func main() {
 	redisClient, err := db.NewRedis()
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf("%s", err.Error())
 	}
 	log.Println("connected to redis")
 	gameServer := server.NewGameServer(redisClient)
