@@ -1,11 +1,16 @@
 services:
   retro-rumble:
     ports:
-      - 1800:1800
+      - 1000:1000
     build:
       context: ./deployment
+    networks:
+      - back-tier
+    restart: always
       
   db:
+    env_file:
+      - ./env
     image: redis:7.4
     command: redis-server --requirepass ${REDIS_PASSWORD} 
     volumes:

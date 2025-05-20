@@ -1,7 +1,18 @@
 package main
 
-import "fmt"
+import (
+	"log"
+
+	"github.com/barnabasSol/retro-rumble/internals/db"
+	"github.com/barnabasSol/retro-rumble/internals/server"
+)
 
 func main() {
-	fmt.Println("hello player")
+	redisClient, err := db.NewRedis()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	log.Println("connected to redis")
+	gameServer := server.NewGameServer(redisClient)
+	gameServer.Start()
 }
