@@ -1,19 +1,20 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"time"
 
 	handlers "github.com/barnabasSol/retro-rumble/internals/handlers/http"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/gorilla/websocket"
 	"github.com/redis/go-redis/v9"
 )
 
 type GameServer struct {
-	db     *redis.Client
-	wsUpgr websocket.Upgrader
+	db *redis.Client
 }
 
 func NewGameServer(redis *redis.Client) *GameServer {
@@ -23,7 +24,6 @@ func NewGameServer(redis *redis.Client) *GameServer {
 }
 
 func (g *GameServer) Start() {
-	g.wsUpgr = upgrader
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
@@ -38,7 +38,17 @@ func (g *GameServer) Start() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	h := handlers.NewHttpHandler(&g.wsUpgr)
+	h := handlers.NewHttpHandler(&upgrader)
+
+	srv := http.Server{
+		Addr:         fmt.Sprintf(":%s", os.Getenv("SERVER_PORT")),
+		Handler:      r,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
+
+	srv.ListenAndServe()
 
 	r.Post("/ws", h.WsUpgrade)
 }
