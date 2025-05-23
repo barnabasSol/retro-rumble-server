@@ -19,7 +19,42 @@ type Client struct {
 }
 
 func (c *Client) writePump() {
-
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		c.conn.Close()
+	}()
+	for {
+		select {
+		case ev, ok := <-c.egress:
+			if !ok {
+				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+			w, err := c.conn.NextWriter(websocket.TextMessage)
+			if err != nil {
+				log.Println(err)
+				c.hub.NotifyErr <- event.Error{
+					PlayerId: c.player.Id,
+					Message:  "couldn't setup erro",
+				}
+			}
+			evJson, err := json.Marshal(ev)
+			if err != nil {
+				log.Println(err)
+				c.hub.NotifyErr <- event.Error{
+					PlayerId: c.player.Id,
+					Message:  "error marshalling event",
+				}
+			}
+			w.Write(evJson)
+		case <-ticker.C:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+		}
+	}
 }
 
 func (c *Client) readPump() {
@@ -54,7 +89,7 @@ func (c *Client) readPump() {
 				Message:  "server rejected unknown event",
 			}
 		}
-		c.hub.Event <- gameEvent
+		//routing events to a handler to bed one soon
 	}
 
 }

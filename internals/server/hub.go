@@ -13,7 +13,6 @@ type GameHub struct {
 	Joined    chan *Client
 	Left      chan *Client
 	NotifyErr chan event.Error
-	Event     chan event.GameEvent
 }
 
 func newGameHub() *GameHub {
@@ -21,7 +20,6 @@ func newGameHub() *GameHub {
 		clients: map[*Client]struct{}{},
 		Joined:  make(chan *Client, 10),
 		Left:    make(chan *Client, 10),
-		Event:   make(chan event.GameEvent, 100),
 	}
 }
 
@@ -45,11 +43,6 @@ func (h *GameHub) run() {
 				log.Println("left channel closed")
 			}
 			log.Println(err)
-		case ev, ok := <-h.Event:
-			if !ok {
-				log.Println("failed to join")
-			}
-			log.Println(ev)
 		}
 	}
 }
