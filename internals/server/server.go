@@ -2,11 +2,11 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
 
-	handlers "github.com/barnabasSol/retro-rumble/internals/handlers/http"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -37,18 +37,24 @@ func (g *GameServer) Start() {
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(middleware.Heartbeat("/health"))
 
-	h := handlers.NewHttpHandler(&upgrader)
+	port := os.Getenv("SERVER_PORT")
 
 	srv := http.Server{
-		Addr:         fmt.Sprintf(":%s", os.Getenv("SERVER_PORT")),
+		Addr:         fmt.Sprintf(":%s", port),
 		Handler:      r,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
 
-	srv.ListenAndServe()
+	hub := newGameHub()
 
-	r.Post("/ws", h.WsUpgrade)
+	r.Get("/ws", hub.serveWS)
+
+	go hub.run()
+
+	log.Println("listening on port", port)
+	srv.ListenAndServe()
 }

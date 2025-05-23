@@ -15,4 +15,5 @@ func main() {
 	log.Println("connected to redis")
 	gameServer := server.NewGameServer(redisClient)
 	gameServer.Start()
+
 }
