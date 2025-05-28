@@ -1,5 +1,7 @@
 services:
   retro-rumble:
+    depends_on:
+      - db
     env_file:
       - .env
     ports:

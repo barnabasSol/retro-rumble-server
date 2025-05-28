@@ -49,12 +49,12 @@ func (g *GameServer) Start() {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	hub := newGameHub()
+	hub := newGameHub(g.db)
 
 	r.Get("/ws", hub.serveWS)
+	// r.Post("/reconnect", hub.reconnect)
 
 	go hub.run()
-
 	log.Println("listening on port", port)
 	srv.ListenAndServe()
 }

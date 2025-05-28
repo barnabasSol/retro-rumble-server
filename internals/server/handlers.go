@@ -1,20 +1,21 @@
 package server
 
-import "github.com/barnabasSol/retro-rumble/internals/event"
+import (
+	"github.com/barnabasSol/retro-rumble/internals/event"
+)
 
-type HandlerType string
-type Handlers map[HandlerType]func(ev event.GameEvent, client *Client)
+type Handlers map[string]func(ev event.GameEvent, client *Client)
 
 type WsEventHandler struct {
-	handlers Handlers
+	handlersMap Handlers
 }
 
 func NewWsEventHandler() *WsEventHandler {
 	return &WsEventHandler{
-		handlers: make(Handlers),
+		handlersMap: make(Handlers),
 	}
 }
 
 func (h *WsEventHandler) init() {
-	h.handlers[""] = func(ev event.GameEvent, client *Client) {}
+	h.handlersMap[""] = func(ev event.GameEvent, client *Client) {}
 }

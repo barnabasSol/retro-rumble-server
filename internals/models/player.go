@@ -6,17 +6,18 @@ import (
 
 type Player struct {
 	Id       string  `json:"id"`
-	Username string  `json:"username"`
 	PosX     float32 `json:"pos_x"`
 	PosY     float32 `json:"pos_y"`
+	IsInGame bool    `json:"is_in_game"`
 }
 
 func NewPlayer(
 	pos_x, pos_y float32,
 ) *Player {
 	return &Player{
-		Id:   uuid.NewString(),
-		PosX: pos_x,
-		PosY: pos_y,
+		Id:       uuid.NewString(),
+		PosX:     pos_x,
+		PosY:     pos_y,
+		IsInGame: false,
 	}
 }

@@ -31,24 +31,16 @@ func (c *Client) writePump() {
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-			w, err := c.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				log.Println(err)
-				c.hub.NotifyErr <- event.Error{
-					PlayerId: c.player.Id,
-					Message:  "couldn't setup erro",
-				}
-			}
 			evJson, err := json.Marshal(ev)
 			if err != nil {
 				log.Println(err)
-				c.hub.NotifyErr <- event.Error{
-					PlayerId: c.player.Id,
-					Message:  "error marshalling event",
-				}
 			}
-			w.Write(evJson)
+			err = c.conn.WriteMessage(websocket.TextMessage, evJson)
+			if err != nil {
+				log.Println("failed to send", ev)
+			}
 		case <-ticker.C:
+			println("ping")
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
@@ -59,12 +51,13 @@ func (c *Client) writePump() {
 
 func (c *Client) readPump() {
 	defer func() {
-		c.hub.Left <- c
+		c.hub.Leave <- c
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error {
+		println("pong")
 		c.conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
@@ -76,7 +69,8 @@ func (c *Client) readPump() {
 				websocket.CloseGoingAway,
 				websocket.CloseAbnormalClosure,
 			) {
-				log.Printf("error here: %v", err)
+				log.Printf("error player leaving: %v", err)
+				c.hub.Leave <- c
 			}
 			break
 		}
@@ -84,12 +78,15 @@ func (c *Client) readPump() {
 		var gameEvent event.GameEvent
 		err = json.Unmarshal(msg, &gameEvent)
 		if err != nil {
-			c.hub.NotifyErr <- event.Error{
-				PlayerId: c.player.Id,
-				Message:  "server rejected unknown event",
-			}
+			log.Println(err)
 		}
-		//routing events to a handler to bed one soon
+		handle, found := c.hub.eventHandlers[gameEvent.Type]
+		if !found {
+			log.Println("event error", err)
+			continue
+		}
+		//? routing events to a handler to be tested
+		handle(gameEvent, c)
 	}
 
 }
