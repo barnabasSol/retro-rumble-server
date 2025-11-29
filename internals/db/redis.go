@@ -13,9 +13,8 @@ func NewRedis() (*redis.Client, error) {
 		return nil, err
 	}
 	return redis.NewClient(&redis.Options{
-		Addr:         os.Getenv("REDIS_ADDRESS"),
-		Password:     os.Getenv("REDIS_PASSWORD"),
-		DB:           db,
-		MinIdleConns: 5,
+		Addr:     os.Getenv("REDIS_ADDRESS"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:       db,
 	}), err
 }

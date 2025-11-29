@@ -14,6 +14,14 @@ func NewRoom(redis *redis.Client) *Room {
 	}
 }
 
+func (r Room) AddRoom() {
+
+}
+
+func (r Room) GetRooms() {
+
+}
+
 func (r Room) CreateRoom() {
 
 }

@@ -1,23 +1,11 @@
 package models
 
-import (
-	"github.com/google/uuid"
-)
+import "github.com/quic-go/quic-go"
 
 type Player struct {
-	Id       string  `json:"id"`
-	PosX     float32 `json:"pos_x"`
-	PosY     float32 `json:"pos_y"`
-	IsInGame bool    `json:"is_in_game"`
+	Id          string      `json:"id"`
+	Send        chan []byte `json:"-"`
+	QuicStreams QuicStream  `json:"-"`
 }
 
-func NewPlayer(
-	pos_x, pos_y float32,
-) *Player {
-	return &Player{
-		Id:       uuid.NewString(),
-		PosX:     pos_x,
-		PosY:     pos_y,
-		IsInGame: false,
-	}
-}
+type QuicStream map[string]*quic.Stream
