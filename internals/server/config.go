@@ -30,7 +30,7 @@ func generateTLSConfig() *tls.Config {
 			Certificate: [][]byte{certDER},
 			PrivateKey:  priv,
 		}},
-		NextProtos: []string{"retrp-rumble-game"},
+		NextProtos: []string{"retro-rumble"},
 	}
 }
 

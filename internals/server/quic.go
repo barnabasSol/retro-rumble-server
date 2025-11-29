@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,15 +21,14 @@ type QuicServer struct {
 
 func NewQuicServer(
 	addr string,
-	tlsConfig *tls.Config,
-	quicConfig *quic.Config,
-	lis *quic.Listener,
 	hub *hub.GameHub,
 ) *QuicServer {
 	lis, err := quic.ListenAddr(
 		addr,
 		generateTLSConfig(),
-		quicConfig,
+		&quic.Config{
+			MaxIncomingStreams: 10,
+		},
 	)
 	if err != nil {
 		panic(err)
@@ -46,7 +44,6 @@ func (s *QuicServer) Start() error {
 	defer s.lis.Close()
 	for {
 		conn, err := s.lis.Accept(context.Background())
-		_ = conn
 		if err != nil {
 			return err
 		}
@@ -99,17 +96,9 @@ func (s *QuicServer) handleConnection(
 			return
 		}
 
-		json.Marshal(event.NewStreamPayload{
-			Identifier: stream_identifier,
-			Stream: stream,
-		})
-
-		s.hub.GameEvent <- models.InboundEvent{
-			Ev: &models.Event{
-				Type: event.TypeNewStream,
-				Event: ,
-			},
+		s.hub.RegisterStream <- &event.NewStreamPayload{
 			Player: p,
+			Stream: stream,
 		}
 
 		go func(
